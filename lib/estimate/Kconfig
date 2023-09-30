@@ -5,5 +5,6 @@ menu "Estimate"
 
 rsource "attitude/Kconfig"
 rsource "rover2d/Kconfig"
+rsource "ins/Kconfig"
 
 endmenu

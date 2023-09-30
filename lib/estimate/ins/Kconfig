@@ -1,0 +1,15 @@
+# Copyright (c) 2023, CogniPilot Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig CEREBRI_ESTIMATE_INS
+  bool "ins"
+  help
+    This option enables the ins estimator
+
+if CEREBRI_ESTIMATE_INS
+
+module = CEREBRI_ESTIMATE_INS
+module-str = estimate_ins
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # CEREBRI_ESTIMATE_INS
