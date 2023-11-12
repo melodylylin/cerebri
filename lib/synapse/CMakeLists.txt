@@ -2,5 +2,6 @@
 
 add_subdirectory_ifdef(CONFIG_CEREBRI_SYNAPSE_ZBUS zbus)
 add_subdirectory_ifdef(CONFIG_CEREBRI_SYNAPSE_ETHERNET ethernet)
+add_subdirectory_ifdef(CONFIG_CEREBRI_SYNAPSE_ZENOH zenoh)
 add_subdirectory_ifdef(CONFIG_CEREBRI_SYNAPSE_TOPIC topic)
 add_subdirectory_ifdef(CONFIG_CEREBRI_SYNAPSE_VESC_CAN vesc_can)

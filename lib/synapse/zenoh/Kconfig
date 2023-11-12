@@ -1,0 +1,17 @@
+# Copyright (c) 2023, CogniPilot Foundation
+# SPDX-License-Identifier: Apache-2.0
+
+config CEREBRI_SYNAPSE_ZENOH
+  bool "Ethernet"
+  default y
+  depends on ZENOH_PICO
+  help
+    This option enables the synapse zenoh interface
+
+if CEREBRI_SYNAPSE_ZENOH
+
+module = CEREBRI_SYNAPSE_ZENOH
+module-str = synapse_zenoh
+source "subsys/logging/Kconfig.template.log_config"
+
+endif # CEREBRI_SYNAPSE_ZENOH

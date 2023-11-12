@@ -8,6 +8,10 @@ zephyr_library_named(zenoh-pico)
 
 #message(STATUS "zenoh pico module dir: ${ZEPHYR_CURRENT_MODULE_DIR}")
 
+zephyr_include_directories(
+  ${ZEPHYR_CURRENT_MODULE_DIR}/include
+  )
+
 zephyr_library_include_directories(
   ${ZEPHYR_CURRENT_MODULE_DIR}/include
   )

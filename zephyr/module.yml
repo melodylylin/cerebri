@@ -8,3 +8,4 @@ build:
     - nanopb
     - synapse_tinyframe
     - synapse_protobuf
+    - zenoh-pico
