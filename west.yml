@@ -43,5 +43,5 @@ manifest:
       revision: 10d8042b41a197228df32425f32c3d65f28bcf59 # zephyr-3.4-compile-fix 7/19/23
     - name: zenoh-pico
       remote: cognipilot
-      revision: 085b7db7b744d93a95b2b800438f10b57359e372 # main 11/11/23
+      revision: 43d2b4c46350363585bae4033271fe3f545c9049 # main 11/11/23
       path: modules/lib/zenoh_pico

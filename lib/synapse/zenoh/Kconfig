@@ -3,7 +3,7 @@
 
 config CEREBRI_SYNAPSE_ZENOH
   bool "Ethernet"
-  default y
+  default n
   depends on ZENOH_PICO
   help
     This option enables the synapse zenoh interface
