@@ -14,6 +14,8 @@ manifest:
       url-base: https://github.com/zephyrproject-rtos
     - name: cognipilot
       url-base: https://github.com/CogniPilot
+    - name: zenoh
+      url-base: https://github.com/eclipse-zenoh
 
   projects:
     - name: zephyr
@@ -39,3 +41,7 @@ manifest:
       remote: cognipilot
       path: ubxlib
       revision: 10d8042b41a197228df32425f32c3d65f28bcf59 # zephyr-3.4-compile-fix 7/19/23
+    - name: zenoh-pico
+      remote: cognipilot
+      revision: f5b17904db456101a0b9c1f5f5b0c03fe78b3dad # main 11/11/23
+      path: modules/lib/zenoh_pico

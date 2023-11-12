@@ -6,6 +6,8 @@
 
 cmake_minimum_required(VERSION 3.13.1)
 
+set(MODULE_EXT_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+
 if (${BOARD} STREQUAL "mr_canhubk3")
   message(STATUS "enabling mr_canhubk3_adap shield")
   set(SHIELD mr_canhubk3_adap)
