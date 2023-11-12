@@ -1,10 +1,27 @@
 # SPDX-License-Identifier: Apache-2.0
 if (CONFIG_ZENOH_PICO)
 
-add_compile_definitions(ZENOH_ZEPHYR)
-add_compile_options(-Wno-unused-variable)
-
 zephyr_library_named(zenoh-pico)
+
+target_compile_definitions(zenoh-pico PUBLIC
+  ZENOH_ZEPHYR
+  ZENOH_DEBUG=3
+  ZENOH_C_STANDARD=11
+  Z_FEATURE_MULTI_THREAD=0
+  Z_FEATURE_DYNAMIC_MEMORY_ALLOCATION=0
+  Z_FEATURE_QUERYABLE=1
+  Z_FEATURE_QUERY=1
+  Z_FEATURE_SUBSCRIPTION=1
+  Z_FEATURE_PUBLICATION=1
+  Z_FEATURE_LINK_TCP=1
+  Z_FEATURE_LINK_BLUETOOTH=0
+  Z_FEATURE_LINK_WS=0
+  Z_FEATURE_LINK_LINK_SERIAL=1
+  Z_FEATURE_SCOUTING_UDP=1
+  Z_FEATURE_LINK_UDP_MULTICAST=1
+  Z_FEATURE_LINK_UDP_UNICAST=1
+  )
+target_compile_options(zenoh-pico PRIVATE -Wno-unused-variable -Wno-implicit-function-declaration -Wno-int-conversion)
 
 #message(STATUS "zenoh pico module dir: ${ZEPHYR_CURRENT_MODULE_DIR}")
 
@@ -25,6 +42,7 @@ file(GLOB_RECURSE Sources
   "${ZEPHYR_CURRENT_MODULE_DIR}/src/session/*.c"
   "${ZEPHYR_CURRENT_MODULE_DIR}/src/transport/*.c"
   "${ZEPHYR_CURRENT_MODULE_DIR}/src/utils/*.c"
+  "${ZEPHYR_CURRENT_MODULE_DIR}/src/system/zephyr/*.c"
 )
 
 #message(STATUS "Sources: ${Sources}")

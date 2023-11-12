@@ -16,10 +16,10 @@
 #include <zenoh-pico.h>
 
 #if Z_FEATURE_SUBSCRIPTION == 1
-#define CLIENT_OR_PEER 0  // 0: Client mode; 1: Peer mode
+#define CLIENT_OR_PEER 0 // 0: Client mode; 1: Peer mode
 #if CLIENT_OR_PEER == 0
 #define MODE "client"
-#define CONNECT ""  // If empty, it will scout
+#define CONNECT "" // If empty, it will scout
 #elif CLIENT_OR_PEER == 1
 #define MODE "peer"
 #define CONNECT "udp/224.0.0.225:7447#iface=en0"
@@ -29,14 +29,16 @@
 
 #define KEYEXPR "demo/example/**"
 
-void data_handler(const z_sample_t *sample, void *arg) {
+void data_handler(const z_sample_t* sample, void* arg)
+{
     z_owned_str_t keystr = z_keyexpr_to_string(sample->keyexpr);
     printf(" >> [Subscriber handler] Received ('%s': '%.*s')\n", z_loan(keystr), (int)sample->payload.len,
-           sample->payload.start);
+        sample->payload.start);
     z_drop(z_move(keystr));
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv)
+{
     sleep(5);
 
     // Initialize Zenoh Session and other parameters
@@ -85,7 +87,8 @@ int main(int argc, char **argv) {
     return 0;
 }
 #else
-int main(void) {
+int main(void)
+{
     printf("ERROR: Zenoh pico was compiled without Z_FEATURE_SUBSCRIPTION but this example requires it.\n");
     return -2;
 }
