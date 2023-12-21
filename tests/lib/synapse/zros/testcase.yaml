@@ -1,0 +1,6 @@
+common:
+  tags: zros
+  integration_platforms:
+    - native_sim
+tests:
+  lib.synapse.zros: {}

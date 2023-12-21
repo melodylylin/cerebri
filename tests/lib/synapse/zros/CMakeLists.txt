@@ -6,19 +6,17 @@
 
 cmake_minimum_required(VERSION 3.13.1)
 
-if (${BOARD} STREQUAL "mr_canhubk3")
-  message(STATUS "enabling mr_canhubk3_adap shield")
-  set(SHIELD mr_canhubk3_adap)
-endif()
-
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
-project(pubsub LANGUAGES C)
+project(zros_minimal LANGUAGES C)
+
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_compile_options(app PRIVATE -Wall -Wextra -Wno-unused-parameter -Werror)
 
-set(SOURCE_FILES
+target_sources(app PRIVATE
   src/main.c
+  src/publisher.c
+  src/subscriber.c
+  src/topic_list.c
   )
-
-target_sources(app PRIVATE ${SOURCE_FILES})

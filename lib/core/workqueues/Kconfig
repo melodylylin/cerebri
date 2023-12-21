@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 menuconfig CEREBRI_CORE_WORKQUEUES
   bool "Enable core work queues"
-  default y
   help
     This option enables the system work queues
 
