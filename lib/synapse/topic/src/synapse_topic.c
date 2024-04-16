@@ -25,7 +25,12 @@ LOG_MODULE_REGISTER(zros_topic);
 #include "synapse_shell_print.h"
 //#include "synapse_topic_list.h"
 
-extern struct k_work_q g_low_priority_work_q;
+#define TOPIC_QUEUE_STACK_SIZE 8192
+#define TOPIC_QUEUE_PRIORITY 6
+
+K_THREAD_STACK_DEFINE(topic_queue_stack_area, TOPIC_QUEUE_STACK_SIZE);
+
+struct k_work_q g_topic_work_q;
 
 typedef int msg_handler_t(const struct shell* sh, struct zros_topic* topic, void* msg, snprint_t* echo);
 void topic_work_handler(struct k_work* work);
@@ -69,7 +74,7 @@ static context_t g_ctx = {
         (safety, &topic_safety, "safety"),                                        \
         (status, &topic_status, "status"),                                        \
         (velocity_sp, &topic_velocity_sp, "velocity_sp"),                         \
-        (orientation_sp, &topic_velocity_sp, "velocity_sp"),                      \
+        (orientation_sp, &topic_orientation_sp, "orientation_sp"),                \
         (wheel_odometry, &topic_wheel_odometry, "wheel_odometry")
 
 static volatile bool keep_running = true;
@@ -183,7 +188,7 @@ static int topic_echo(const struct shell* sh, struct zros_topic* topic, void* ms
         // limit to 10 hz
         k_msleep(100);
         // wait for new message
-        rc = k_poll(events, ARRAY_SIZE(events), K_MSEC(sample_period * 1e3));
+        rc = k_poll(events, ARRAY_SIZE(events), K_MSEC(sample_period * 1e3f));
         zros_topic_get_name(topic, name, sizeof(name));
         if (rc != 0) {
             LOG_WRN("%s not published.", name);
@@ -285,7 +290,7 @@ static int cmd_zros_topic_hz(const struct shell* sh,
     g_ctx.sh = sh;
     g_ctx.handler = &topic_count_hz;
     g_ctx.topic = topic;
-    return k_work_submit_to_queue(&g_low_priority_work_q, &g_ctx.work_item);
+    return k_work_submit_to_queue(&g_topic_work_q, &g_ctx.work_item);
 }
 
 static int cmd_zros_topic_echo(const struct shell* sh,
@@ -295,7 +300,7 @@ static int cmd_zros_topic_echo(const struct shell* sh,
     g_ctx.sh = sh;
     g_ctx.handler = &topic_echo;
     g_ctx.topic = topic;
-    return k_work_submit_to_queue(&g_low_priority_work_q, &g_ctx.work_item);
+    return k_work_submit_to_queue(&g_topic_work_q, &g_ctx.work_item);
 }
 
 void topic_print_iterator(const struct zros_topic* topic, void* data)
@@ -380,5 +385,23 @@ SHELL_STATIC_SUBCMD_SET_CREATE(sub_zros,
 
 // level 0 (zros)
 SHELL_CMD_REGISTER(zros, &sub_zros, "ZROS Commands", NULL);
+
+static int init_topic_queue(void)
+{
+    k_work_queue_init(&g_topic_work_q);
+    struct k_work_queue_config topic_work_cfg = {
+        .name = "synapse_topic_q",
+        .no_yield = false
+    };
+    k_work_queue_start(
+        &g_topic_work_q,
+        topic_queue_stack_area,
+        K_THREAD_STACK_SIZEOF(topic_queue_stack_area),
+        TOPIC_QUEUE_PRIORITY,
+        &topic_work_cfg);
+    return 0;
+};
+
+SYS_INIT(init_topic_queue, POST_KERNEL, 0);
 
 /* vi: ts=4 sw=4 et: */

@@ -170,47 +170,57 @@ static void rdd2_position_run(void* p0, void* p1, void* p2)
         }
 
         if (ctx->status.mode == synapse_msgs_Status_Mode_MODE_AUTO) {
-            //['vt', 'yt', 'Kp', 'Kv', 'vel', 'q'],
-            //["u1", "e_r"])
-            CASADI_FUNC_ARGS(velocity_control)
+            /* position_control:(pt[3],vt[3],yt,Kp,Kv,pos[3],vel[3])->(nT,q[3]) */
+            CASADI_FUNC_ARGS(position_control)
+            double pt[3];
             double vt[3];
-            double yt = ctx->orientation_sp.z;
-            double Kp = 1;
-            double Kv = 1;
+            double yt = ctx->orientation_sp.x; // desired yaw
+            double Kp = 0.1;
+            double Kv = 0.1;
+            double pos[3];
             double vel[3];
             double q[4];
 
             double thrust;
-            double r_e[3];
+            double euler[3];
 
-            vt[0] = ctx->velocity_sp.x;
-            vt[1] = ctx->velocity_sp.y;
-            vt[2] = ctx->velocity_sp.z;
-            vel[0] = ctx->external_odometry.twist.twist.linear.y;
-            vel[1] = ctx->external_odometry.twist.twist.linear.x;
-            vel[2] = ctx->external_odometry.twist.twist.linear.z;
+            // set position as current position for now, kills pos feedback
+            pt[0] = 0;
+            pt[1] = 0;
+            pt[2] = 2;
+            vt[0] = 0;
+            vt[1] = 0;
+            vt[2] = 0;
             q[0] = ctx->estimator_odometry.pose.pose.orientation.w;
             q[1] = ctx->estimator_odometry.pose.pose.orientation.x;
             q[2] = ctx->estimator_odometry.pose.pose.orientation.y;
             q[3] = ctx->estimator_odometry.pose.pose.orientation.z;
+            pos[0] = ctx->estimator_odometry.pose.pose.position.x;
+            pos[1] = ctx->estimator_odometry.pose.pose.position.y;
+            pos[2] = ctx->estimator_odometry.pose.pose.position.z;
+            vel[0] = ctx->external_odometry.twist.twist.linear.y;
+            vel[1] = ctx->external_odometry.twist.twist.linear.x;
+            vel[2] = ctx->external_odometry.twist.twist.linear.z;
 
-            args[0] = vt;
-            args[1] = &yt;
-            args[2] = &Kp;
-            args[3] = &Kv;
-            args[4] = vel;
-            args[5] = q;
+            args[0] = pt;
+            args[1] = vt;
+            args[2] = &yt;
+            args[3] = &Kp;
+            args[4] = &Kv;
+            args[5] = pos;
+            args[6] = vel;
+            args[7] = q;
             res[0] = &thrust;
-            res[1] = r_e;
+            res[1] = euler;
 
-            CASADI_FUNC_CALL(velocity_control)
+            CASADI_FUNC_CALL(position_control)
 
-            ctx->attitude_sp.x = r_e[0];
-            ctx->attitude_sp.y = r_e[1];
-            ctx->attitude_sp.z = r_e[2];
+            ctx->attitude_sp.x = euler[0];
+            ctx->attitude_sp.y = euler[1];
+            ctx->attitude_sp.z = euler[2];
             zros_pub_update(&ctx->pub_attitude_sp);
 
-            ctx->force_sp.z = thrust / 19.6 * 0.5;
+            ctx->force_sp.z = thrust/(2*9.8);
             zros_pub_update(&ctx->pub_force_sp);
         }
     }

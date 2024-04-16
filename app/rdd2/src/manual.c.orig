@@ -148,8 +148,6 @@ static void rdd2_manual_run(void* p0, void* p1, void* p2)
         }
 
         if (ctx->status.mode == synapse_msgs_Status_Mode_MODE_MANUAL) {
-            // attitude rate
-            
             // angular velocity set point
             ctx->angular_velocity_sp.x = -60 * deg2rad * (double)ctx->joy.axes[JOY_AXES_ROLL];
             ctx->angular_velocity_sp.y = 60 * deg2rad * (double)ctx->joy.axes[JOY_AXES_PITCH];
@@ -161,8 +159,6 @@ static void rdd2_manual_run(void* p0, void* p1, void* p2)
             zros_pub_update(&ctx->pub_force_sp);
 
         } else if (ctx->status.mode == synapse_msgs_Status_Mode_MODE_CMD_VEL) {
-            // attitude
-            
             /* quaternion_to_euler:(q[4])->(e[3]) */
             CASADI_FUNC_ARGS(quaternion_to_euler);
             double q[4];
@@ -176,9 +172,15 @@ static void rdd2_manual_run(void* p0, void* p1, void* p2)
             CASADI_FUNC_CALL(quaternion_to_euler);
 
             // attitude set point
-            ctx->attitude_sp.x = (e[0] + 20 * deg2rad * (double)ctx->joy.axes[JOY_AXES_YAW]);
-            ctx->attitude_sp.y = 20 * deg2rad * (double)ctx->joy.axes[JOY_AXES_PITCH];
-            ctx->attitude_sp.z = -20 * deg2rad * (double)ctx->joy.axes[JOY_AXES_ROLL];
+<<<<<<< HEAD
+            ctx->attitude_sp.x = -20 * deg2rad * ctx->joy.axes[JOY_AXES_ROLL];
+            ctx->attitude_sp.y = 20 * deg2rad * ctx->joy.axes[JOY_AXES_PITCH];
+            ctx->attitude_sp.z = (e[0] + 20 * deg2rad * ctx->joy.axes[JOY_AXES_YAW]);
+=======
+            ctx->attitude_sp.x = -20 * deg2rad * (double)ctx->joy.axes[JOY_AXES_ROLL];
+            ctx->attitude_sp.y = -20 * deg2rad * (double)ctx->joy.axes[JOY_AXES_PITCH];
+            ctx->attitude_sp.z = -(e[0] + 20 * deg2rad * (double)ctx->joy.axes[JOY_AXES_YAW]);
+>>>>>>> main
             zros_pub_update(&ctx->pub_attitude_sp);
 
             // thrust pass through
@@ -186,7 +188,7 @@ static void rdd2_manual_run(void* p0, void* p1, void* p2)
             zros_pub_update(&ctx->pub_force_sp);
 
         } else if (ctx->status.mode == synapse_msgs_Status_Mode_MODE_AUTO) {
-            /* quaternion_to_euler:(q[4])->(e[3]) */
+
             CASADI_FUNC_ARGS(quaternion_to_euler);
             double q[4];
             q[0] = ctx->estimator_odometry.pose.pose.orientation.w;
@@ -198,14 +200,12 @@ static void rdd2_manual_run(void* p0, void* p1, void* p2)
             res[0] = e;
             CASADI_FUNC_CALL(quaternion_to_euler);
 
-            // velocity
-            ctx->velocity_sp.x = 1 * ctx->joy.axes[JOY_AXES_ROLL];
-            ctx->velocity_sp.y = 1 * ctx->joy.axes[JOY_AXES_PITCH];
-            ctx->velocity_sp.z = 1 * ctx->joy.axes[JOY_AXES_THRUST];
+            ctx->velocity_sp.x = 2 * ctx->joy.axes[JOY_AXES_ROLL];
+            ctx->velocity_sp.y = 2 * ctx->joy.axes[JOY_AXES_PITCH];
+            ctx->velocity_sp.z = 2 * ctx->joy.axes[JOY_AXES_THRUST];
             zros_pub_update(&ctx->pub_velocity_sp);
 
-            // desired camera direction
-            ctx->orientation_sp.x = -(e[0] + 20 * deg2rad * (double)ctx->joy.axes[JOY_AXES_YAW]);
+            ctx->orientation_sp.z = -20 * deg2rad * ctx->joy.axes[JOY_AXES_YAW];
             zros_pub_update(&ctx->pub_orientation_sp);
         }
     }

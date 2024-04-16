@@ -122,9 +122,9 @@ static void rdd2_attitude_run(void* p0, void* p1, void* p2)
             double q[4];
             double angle_error[3];
 
-            double roll_sp = ctx->attitude_sp.x; // body forward axis
-            double pitch_sp = ctx->attitude_sp.y; // - body left axis
-            double yaw_sp = ctx->attitude_sp.z; // - body up axis
+            double yaw_sp = ctx->attitude_sp.x; // yaw
+            double pitch_sp = ctx->attitude_sp.y; // pitch
+            double roll_sp = ctx->attitude_sp.z; // roll
 
             q[0] = ctx->estimator_odometry.pose.pose.orientation.w;
             q[1] = ctx->estimator_odometry.pose.pose.orientation.x;

@@ -19,7 +19,7 @@ manifest:
     - name: zephyr
       remote: cognipilot
       west-commands: scripts/west-commands.yml
-      revision: 041076e5961152a3dee7ef6de8dd502ae3269940 # airy 12/28/23
+      revision: 32b2127b61eaaa227c23a4afc8f7c81d34884496 # b_mythical 04/12/24
       import:
         - name-allowlist:
           - nanopb
@@ -27,6 +27,8 @@ manifest:
           - hal_nxp
           - cmsis
           - ubxlib
+          - fatfs
+          - littlefs
     - name: zros
       remote: cognipilot
       revision: 467bd1042bef93ded9ba76287609ab47e76f9fa7 # main 2/12/24
@@ -37,9 +39,9 @@ manifest:
       path: modules/lib/synapse_tinyframe
     - name: synapse_protobuf
       remote: cognipilot
-      revision: a161990062d4ed40ea4b39d66877a45f340eb622 # main 12/12/23
+      revision: a32619cd57bf692893088189e8f5d0c8cec44ecb # main 04/12/24
       path: modules/lib/synapse_protobuf
     - name: ubxlib
       remote: cognipilot
       path: modules/lib/ubxlib
-      revision: 0e8c66196a9366acf70fb7cfa5a2eaec6647e89d # airy 12/04/23
+      revision: 9c485ed5ab663b96cae6199498356fd13ee35904 # b_mythical 04/12/24
