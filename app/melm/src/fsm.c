@@ -20,7 +20,7 @@
 #define MY_PRIORITY 4
 #define STATE_ANY -1
 
-LOG_MODULE_REGISTER(elm4_fsm, CONFIG_CEREBRI_ELM4_LOG_LEVEL);
+LOG_MODULE_REGISTER(melm_fsm, CONFIG_CEREBRI_MELM_LOG_LEVEL);
 
 void transition(
     void* state,
@@ -120,9 +120,9 @@ static context g_ctx = {
     .pub_status = {},
 };
 
-static void elm4_fsm_init(context* ctx)
+static void melm_fsm_init(context* ctx)
 {
-    zros_node_init(&ctx->node, "elm4_fsm");
+    zros_node_init(&ctx->node, "melm_fsm");
     zros_sub_init(&ctx->sub_joy, &ctx->node, &topic_joy, &ctx->joy, 10);
     zros_sub_init(&ctx->sub_battery_state, &ctx->node,
         &topic_battery_state, &ctx->battery_state, 10);
@@ -144,7 +144,7 @@ static void fsm_compute_input(status_input_t* input, const context* ctx)
 #else
     input->safe = false;
 #endif
-    input->fuel_critical = ctx->battery_state.voltage < CONFIG_CEREBRI_ELM4_BATTERY_MIN_MILLIVOLT / 1000.0;
+    input->fuel_critical = ctx->battery_state.voltage < CONFIG_CEREBRI_MELM_BATTERY_MIN_MILLIVOLT / 1000.0;
 }
 
 static void fsm_update(synapse_msgs_Status* status, const status_input_t* input)
@@ -228,8 +228,8 @@ static void status_add_extra_info(synapse_msgs_Status* status, status_input_t* i
     } else {
         status->fuel = synapse_msgs_Status_Fuel_FUEL_NOMINAL;
     }
-    double bat_max = CONFIG_CEREBRI_ELM4_BATTERY_MAX_MILLIVOLT / 1000.0;
-    double bat_min = CONFIG_CEREBRI_ELM4_BATTERY_MIN_MILLIVOLT / 1000.0;
+    double bat_max = CONFIG_CEREBRI_MELM_BATTERY_MAX_MILLIVOLT / 1000.0;
+    double bat_min = CONFIG_CEREBRI_MELM_BATTERY_MIN_MILLIVOLT / 1000.0;
     status->fuel_percentage = 100 * (ctx->battery_state.voltage - bat_min) / (bat_max - bat_min);
     status->power = ctx->battery_state.voltage * ctx->battery_state.current;
 #ifdef CONFIG_CEREBRI_SENSE_SAFETY
@@ -245,13 +245,13 @@ static void status_add_extra_info(synapse_msgs_Status* status, status_input_t* i
 #endif
 }
 
-static void elm4_fsm_run(void* p0, void* p1, void* p2)
+static void melm_fsm_run(void* p0, void* p1, void* p2)
 {
     context* ctx = p0;
     ARG_UNUSED(p1);
     ARG_UNUSED(p2);
 
-    elm4_fsm_init(ctx);
+    melm_fsm_init(ctx);
 
     struct k_poll_event events[] = {
         *zros_sub_get_event(&ctx->sub_joy),
@@ -289,8 +289,8 @@ static void elm4_fsm_run(void* p0, void* p1, void* p2)
     }
 }
 
-K_THREAD_DEFINE(elm4_fsm, MY_STACK_SIZE,
-    elm4_fsm_run, &g_ctx, NULL, NULL,
+K_THREAD_DEFINE(melm_fsm, MY_STACK_SIZE,
+    melm_fsm_run, &g_ctx, NULL, NULL,
     MY_PRIORITY, 0, 0);
 
 /* vi: ts=4 sw=4 et */

@@ -20,7 +20,7 @@
 #define MY_STACK_SIZE 2048
 #define MY_PRIORITY 4
 
-LOG_MODULE_REGISTER(elm4_lighting, CONFIG_CEREBRI_ELM4_LOG_LEVEL);
+LOG_MODULE_REGISTER(melm_lighting, CONFIG_CEREBRI_MELM_LOG_LEVEL);
 
 extern struct k_work_q g_low_priority_work_q;
 static void lighting_work_handler(struct k_work* work);
@@ -62,7 +62,7 @@ static context_t g_ctx = {
 
 static void lighting_init(context_t* ctx)
 {
-    zros_node_init(&ctx->node, "elm4_lighting");
+    zros_node_init(&ctx->node, "melm_lighting");
     zros_sub_init(&ctx->sub_battery_state, &ctx->node, &topic_battery_state, &ctx->battery_state, 10);
     zros_sub_init(&ctx->sub_safety, &ctx->node, &topic_safety, &ctx->safety, 10);
     zros_sub_init(&ctx->sub_status, &ctx->node, &topic_status, &ctx->status, 10);
@@ -117,7 +117,7 @@ static void lighting_work_handler(struct k_work* work)
     const int headlight_leds[] = { 6, 7, 8, 9, 10, 11 };
     const double color_white[] = { 1, 1, 1 };
 
-    bool battery_critical = ctx->battery_state.voltage < CONFIG_CEREBRI_ELM4_BATTERY_MIN_MILLIVOLT / 1000.0;
+    bool battery_critical = ctx->battery_state.voltage < CONFIG_CEREBRI_MELM_BATTERY_MIN_MILLIVOLT / 1000.0;
 
     // mode leds
     for (size_t i = 0; i < ARRAY_SIZE(mode_leds); i++) {
@@ -216,7 +216,7 @@ static void lighting_entry_point(void* p0, void* p1, void* p2)
     k_timer_start(&ctx->timer, K_MSEC(33), K_MSEC(33));
 }
 
-K_THREAD_DEFINE(elm4_lighting, MY_STACK_SIZE,
+K_THREAD_DEFINE(melm_lighting, MY_STACK_SIZE,
     lighting_entry_point, &g_ctx, NULL, NULL,
     MY_PRIORITY, 0, 0);
 

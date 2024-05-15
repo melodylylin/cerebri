@@ -20,9 +20,9 @@
 
 #include <cerebri/core/casadi.h>
 
-#include "casadi/gen/elm4.h"
+#include "casadi/gen/melm.h"
 
-LOG_MODULE_REGISTER(elm4_estimate, CONFIG_CEREBRI_ELM4_LOG_LEVEL);
+LOG_MODULE_REGISTER(melm_estimate, CONFIG_CEREBRI_MELM_LOG_LEVEL);
 
 #define MY_STACK_SIZE 4096
 #define MY_PRIORITY 4
@@ -61,12 +61,12 @@ static context g_ctx = {
     .sub_imu = {},
     .pub_odometry = {},
     .x = {},
-    .wheel_radius = CONFIG_CEREBRI_ELM4_WHEEL_RADIUS_MM / 1000.0,
+    .wheel_radius = CONFIG_CEREBRI_MELM_WHEEL_RADIUS_MM / 1000.0,
 };
 
 static void estimate_rover2d_init(context* ctx)
 {
-    zros_node_init(&ctx->node, "elm4_estimate");
+    zros_node_init(&ctx->node, "melm_estimate");
     zros_sub_init(&ctx->sub_imu, &ctx->node, &topic_imu, &ctx->imu, 10);
     zros_sub_init(&ctx->sub_wheel_odometry, &ctx->node, &topic_wheel_odometry,
         &ctx->wheel_odometry, 10);
@@ -96,7 +96,7 @@ static void handle_update(context* ctx, double* x1)
     }
 }
 
-static void elm4_estimate_entry_point(void* p0, void* p1, void* p2)
+static void melm_estimate_entry_point(void* p0, void* p1, void* p2)
 
 {
     context* ctx = p0;
@@ -218,7 +218,7 @@ static void elm4_estimate_entry_point(void* p0, void* p1, void* p2)
     }
 }
 
-K_THREAD_DEFINE(elm4_estimate, MY_STACK_SIZE, elm4_estimate_entry_point,
+K_THREAD_DEFINE(melm_estimate, MY_STACK_SIZE, melm_estimate_entry_point,
     &g_ctx, NULL, NULL, MY_PRIORITY, 0, 0);
 
 /* vi: ts=4 sw=4 et */

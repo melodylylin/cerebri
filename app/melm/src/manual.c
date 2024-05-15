@@ -20,7 +20,7 @@
 #define MY_STACK_SIZE 1024
 #define MY_PRIORITY 4
 
-LOG_MODULE_REGISTER(elm4_manual, CONFIG_CEREBRI_ELM4_LOG_LEVEL);
+LOG_MODULE_REGISTER(melm_manual, CONFIG_CEREBRI_MELM_LOG_LEVEL);
 
 typedef struct _context {
     struct zros_node node;
@@ -39,20 +39,20 @@ static context g_ctx = {
     .actuators_manual = synapse_msgs_Actuators_init_default,
     .sub_joy = {},
     .pub_actuators_manual = {},
-    .wheel_radius = CONFIG_CEREBRI_ELM4_WHEEL_RADIUS_MM / 1000.0,
-    .max_angular_velocity = CONFIG_CEREBRI_ELM4_MAX_ANGULAR_VELOCITY_MRAD_S / 1000.0,
-    .max_velocity = CONFIG_CEREBRI_ELM4_MAX_VELOCITY_MM_S / 1000.0,
+    .wheel_radius = CONFIG_CEREBRI_MELM_WHEEL_RADIUS_MM / 1000.0,
+    .max_angular_velocity = CONFIG_CEREBRI_MELM_MAX_ANGULAR_VELOCITY_MRAD_S / 1000.0,
+    .max_velocity = CONFIG_CEREBRI_MELM_MAX_VELOCITY_MM_S / 1000.0,
 };
 
 static void init(context* ctx)
 {
-    zros_node_init(&ctx->node, "elm4_manual");
+    zros_node_init(&ctx->node, "melm_manual");
     zros_sub_init(&ctx->sub_joy, &ctx->node, &topic_joy, &ctx->joy, 10);
     zros_pub_init(&ctx->pub_actuators_manual, &ctx->node,
         &topic_actuators_manual, &ctx->actuators_manual);
 }
 
-static void elm4_manual_entry_point(void* p0, void* p1, void* p2)
+static void melm_manual_entry_point(void* p0, void* p1, void* p2)
 {
     context* ctx = p0;
     ARG_UNUSED(p1);
@@ -79,14 +79,14 @@ static void elm4_manual_entry_point(void* p0, void* p1, void* p2)
         // compute turn_angle, and angular velocity from joystick
         double omega_turn = ctx->max_angular_velocity * (double)ctx->joy.axes[JOY_AXES_ROLL];
         double omega_fwd = ctx->max_velocity * (double)ctx->joy.axes[JOY_AXES_THRUST] / ctx->wheel_radius;
-        elm4_set_actuators(&ctx->actuators_manual, omega_fwd, omega_turn);
+        melm_set_actuators(&ctx->actuators_manual, omega_fwd, omega_turn);
 
         zros_pub_update(&ctx->pub_actuators_manual);
     }
 }
 
-K_THREAD_DEFINE(elm4_manual, MY_STACK_SIZE,
-    elm4_manual_entry_point, &g_ctx, NULL, NULL,
+K_THREAD_DEFINE(melm_manual, MY_STACK_SIZE,
+    melm_manual_entry_point, &g_ctx, NULL, NULL,
     MY_PRIORITY, 0, 0);
 
 /* vi: ts=4 sw=4 et */

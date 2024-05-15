@@ -359,5 +359,5 @@ if __name__ == "__main__":
     for name, eq in eqs.items():
         print('eq: ', name)
 
-    generate_code(eqs, filename="elm4.c", dest_dir="gen")
+    generate_code(eqs, filename="melm.c", dest_dir="gen")
     print("complete")

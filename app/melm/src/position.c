@@ -16,14 +16,14 @@
 
 #include <zephyr/logging/log.h>
 
-#include "casadi/gen/elm4.h"
+#include "casadi/gen/melm.h"
 
 #include <cerebri/core/casadi.h>
 
 #define MY_STACK_SIZE 3072
 #define MY_PRIORITY 4
 
-LOG_MODULE_REGISTER(elm4_position, CONFIG_CEREBRI_ELM4_LOG_LEVEL);
+LOG_MODULE_REGISTER(melm_position, CONFIG_CEREBRI_MELM_LOG_LEVEL);
 
 typedef struct _context {
     struct zros_node node;
@@ -56,15 +56,15 @@ static context g_ctx = {
     .sub_pose = {},
     .sub_bezier_trajectory = {},
     .pub_cmd_vel = {},
-    .wheel_base = CONFIG_CEREBRI_ELM4_WHEEL_BASE_MM / 1000.0,
-    .gain_along_track = CONFIG_CEREBRI_ELM4_GAIN_ALONG_TRACK / 1000.0,
-    .gain_cross_track = CONFIG_CEREBRI_ELM4_GAIN_CROSS_TRACK / 1000.0,
-    .gain_heading = CONFIG_CEREBRI_ELM4_GAIN_HEADING / 1000.0,
+    .wheel_base = CONFIG_CEREBRI_MELM_WHEEL_BASE_MM / 1000.0,
+    .gain_along_track = CONFIG_CEREBRI_MELM_GAIN_ALONG_TRACK / 1000.0,
+    .gain_cross_track = CONFIG_CEREBRI_MELM_GAIN_CROSS_TRACK / 1000.0,
+    .gain_heading = CONFIG_CEREBRI_MELM_GAIN_HEADING / 1000.0,
 };
 
 static void init(context* ctx)
 {
-    zros_node_init(&ctx->node, "elm4_position");
+    zros_node_init(&ctx->node, "melm_position");
     zros_sub_init(&ctx->sub_status, &ctx->node, &topic_status, &ctx->status, 10);
     zros_sub_init(&ctx->sub_clock_offset, &ctx->node, &topic_clock_offset, &ctx->clock_offset, 10);
     zros_sub_init(&ctx->sub_pose, &ctx->node, &topic_estimator_odometry, &ctx->pose, 10);
@@ -174,7 +174,7 @@ static void auto_mode(context* ctx)
     ctx->cmd_vel.angular.z = omega + ctx->gain_cross_track * e[1] + ctx->gain_heading * e[2];
 }
 
-static void elm4_position_entry_point(void* p0, void* p1, void* p2)
+static void melm_position_entry_point(void* p0, void* p1, void* p2)
 {
     context* ctx = p0;
     ARG_UNUSED(p1);
@@ -222,8 +222,8 @@ static void elm4_position_entry_point(void* p0, void* p1, void* p2)
     }
 }
 
-K_THREAD_DEFINE(elm4_position, MY_STACK_SIZE,
-    elm4_position_entry_point, &g_ctx, NULL, NULL,
+K_THREAD_DEFINE(melm_position, MY_STACK_SIZE,
+    melm_position_entry_point, &g_ctx, NULL, NULL,
     MY_PRIORITY, 0, 0);
 
 /* vi: ts=4 sw=4 et */

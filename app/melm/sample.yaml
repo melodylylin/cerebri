@@ -1,16 +1,16 @@
 sample:
-  description: ELM4
-  name: ELM4
+  description: MELM
+  name: MELM
 common:
   build_only: true
 tests:
-  elm4.posix:
+  melm.posix:
     tags:
-      - elm4
+      - melm
     integration_platforms:
       - native_sim
-  elm4.vmu_rt1170/mimxrt1176/cm7:
+  melm.vmu_rt1170/mimxrt1176/cm7:
     tags:
-      - elm4
+      - melm
     integration_platforms:
       - vmu_rt1170/mimxrt1176/cm7

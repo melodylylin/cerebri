@@ -10,7 +10,7 @@
 
 #include <cerebri/core/common.h>
 
-LOG_MODULE_REGISTER(elm4_main, CONFIG_CEREBRI_ELM4_LOG_LEVEL);
+LOG_MODULE_REGISTER(melm_main, CONFIG_CEREBRI_MELM_LOG_LEVEL);
 
 int main(void)
 {

@@ -5,7 +5,7 @@
 
 #include <synapse_topic_list.h>
 
-void elm4_set_actuators(synapse_msgs_Actuators* msg, double omega_fwd, double omega_turn)
+void melm_set_actuators(synapse_msgs_Actuators* msg, double omega_fwd, double omega_turn)
 {
     msg->has_header = true;
     stamp_header(&msg->header, k_uptime_ticks());

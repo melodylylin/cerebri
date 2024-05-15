@@ -8,11 +8,11 @@ cmake_minimum_required(VERSION 3.13.1)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
-project(elm4 LANGUAGES C)
+project(melm LANGUAGES C)
 
 target_compile_options(app PRIVATE -Wall -Wextra -Werror)
 
-set_source_files_properties(src/casadi/gen/elm4.c PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
+set_source_files_properties(src/casadi/gen/melm.c PROPERTIES COMPILE_FLAGS -Wno-unused-parameter)
 
 set(SOURCE_FILES
   src/estimate.c
@@ -23,7 +23,7 @@ set(SOURCE_FILES
   src/mixing.c
   src/position.c
   src/velocity.c
-  src/casadi/gen/elm4.c
+  src/casadi/gen/melm.c
   )
 
 target_sources(app PRIVATE ${SOURCE_FILES})
