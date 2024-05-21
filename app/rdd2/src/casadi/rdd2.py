@@ -7,7 +7,10 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import casadi as ca
 import cyecca.lie as lie
+
+from cyecca.symbolic import SERIES
 from cyecca.lie.group_so3 import SO3Quat, SO3EulerB321
+from cyecca.lie.group_se23 import SE23LieGroupElement, SE23LieAlgebraElement, SE23Quat
 
 
 def derive_attitude_error():
@@ -49,11 +52,82 @@ def derive_attitude_error():
        "quaternion_to_euler",
        [q], [e], ["q"], ["e"])
 
+    f_euler_to_quaternion = ca.Function(
+       "quaternion_to_euler",
+       [roll_r, pitch_r, yaw_r], [R.param], ["yaw", "pitch", "roll"], ["q_wb"])
+
     eqs = {
             "attitude_error": f_attitude_error,
-            "quaternion_to_euler": f_quaternion_to_euler
+            "quaternion_to_euler": f_quaternion_to_euler,
+            "euler_to_quaternion": f_euler_to_quaternion,
             }
     return eqs
+
+def calculate_N(v: SE23LieAlgebraElement, B: ca.SX):
+    omega = v.Omega
+    Omega = omega.to_Matrix()
+    OmegaSq = Omega @ Omega
+    A = ca.sparsify(ca.horzcat(v.a_b.param, v.v_b.param))
+    B = ca.sparsify(B)
+    theta = ca.norm_2(omega.param)
+    C1 = SERIES["(1 - cos(x))/x^2"](theta)
+    C2 = SERIES["(x - sin(x))/x^3"](theta)
+    C3 = SERIES["(x^2/2 + cos(x) - 1)/x^4"](theta)
+    AB = A @ B
+    I3 = ca.SX.eye(3)
+    return (
+        A
+        + AB / 2
+        + Omega @ A @ (C1 * np.eye(2) + C2 * B)
+        + Omega @ Omega @ A @ (C2 * np.eye(2) + C3 * B)
+    )
+
+
+def exp_mixed(
+    X0: SE23LieGroupElement,
+    l: SE23LieAlgebraElement,
+    r: SE23LieAlgebraElement,
+    B: ca.SX,
+):
+    P0 = ca.horzcat(X0.v.param, X0.p.param)
+    Pl = calculate_N(l, B)
+    Pr = calculate_N(r, -B)
+    R0 = X0.R
+    Rl = (l).Omega.exp(lie.SO3Quat)
+    Rr = (r).Omega.exp(lie.SO3Quat)
+    Rr0 = Rr * R0
+    R1 = Rr0 * Rl
+
+    I2 = ca.SX.eye(2)
+    P1 = Rr0.to_Matrix() @ Pl + (Rr.to_Matrix() @ P0 + Pr) @ (I2 + B)
+    return lie.SE23Quat.elem(ca.vertcat(P1[:, 1], P1[:, 0], R1.param))
+
+
+def derive_strapdown_ins_propagation():
+    dt = ca.SX.sym("dt")
+    X0 = lie.SE23Quat.elem(ca.SX.sym("X0", 10))
+    a_b = ca.SX.sym("a_b", 3)
+    g = ca.SX.sym("g")
+    omega_b = ca.SX.sym("omega_b", 3)
+    l = lie.se23.elem(ca.vertcat(0, 0, 0, a_b, omega_b))
+    r = lie.se23.elem(ca.vertcat(0, 0, 0, 0, 0, g, 0, 0, 0))
+    B = ca.sparsify(ca.SX([[0, 1], [0, 0]]))
+    X1 = exp_mixed(X0, l * dt, r * dt, B * dt)
+    r1 = lie.SO3Quat.elem(X1.param[6:10])
+    #lie.SO3EulerB321.shadow_if_necessary(r1)
+    X1.param[6:10] = r1.param
+    f_ins =  ca.Function(
+        "strapdown_ins_propagate",
+        [X0.param, a_b, omega_b, g, dt],
+        [X1.param],
+        ["x0", "a_b", "omega_b", "g", "dt"],
+        ["x1"],
+    )
+    eqs = {
+        "strapdown_ins_propagate" : f_ins
+    }
+    return eqs
+
 
 def position_control():
     #inputs: position trajectory, velocity trajectory, desired Yaw vel, dt, Kp, Kv
@@ -154,6 +228,7 @@ if __name__ == "__main__":
     eqs = {}
     eqs.update(derive_attitude_error())
     eqs.update(position_control())
+    eqs.update(derive_strapdown_ins_propagation())
 
     for name, eq in eqs.items():
         print('eq: ', name)

@@ -143,6 +143,8 @@ static void rdd2_estimate_run(void* p0, void* p1, void* p2)
     double dt = 0;
     int64_t ticks_last = k_uptime_ticks();
 
+    double x[9] = {};
+
     // poll on imu
     events[0] = *zros_sub_get_event(&ctx->sub_imu);
 
@@ -172,32 +174,58 @@ static void rdd2_estimate_run(void* p0, void* p1, void* p2)
             continue;
         }
 
+        /* strapdown_ins_propagate:(x0[9],a_b[3],omega_b[3],g,dt)->(x1[9]) */
+        CASADI_FUNC_ARGS(strapdown_ins_propagate)
+        double x1[9];
+
+        double a_b[3];
+        a_b[0] = ctx->imu.linear_acceleration.x;
+        a_b[1] = ctx->imu.linear_acceleration.y;
+        a_b[2] = ctx->imu.linear_acceleration.z;
+
+        double omega_b[3];
+        omega_b[0] = ctx->imu.angular_velocity.x;
+        omega_b[1] = ctx->imu.angular_velocity.y;
+        omega_b[2] = ctx->imu.angular_velocity.z;
+
+        const double g = 9.8;
+        args[0] = x;
+        args[1] = a_b;
+        args[2] = omega_b;
+        args[3] = &g;
+        args[4] = &dt;
+        res[0] = x1;
+        CASADI_FUNC_CALL(strapdown_ins_propagate)
+        for (int i = 0; i < 9; i++) {
+            x[i] = x1[i];
+        }
+
         // publish odometry
         {
             stamp_header(&ctx->odometry.header, k_uptime_ticks());
             ctx->odometry.header.seq = seq++;
 
             // state feedback for now
-            ctx->odometry.pose.pose.position.x = ctx->external_odometry.pose.pose.position.x;
-            ctx->odometry.pose.pose.position.y = ctx->external_odometry.pose.pose.position.y;
-            ctx->odometry.pose.pose.position.z = ctx->external_odometry.pose.pose.position.z;
+            ctx->odometry.pose.pose.position.x = x[0];
+            ctx->odometry.pose.pose.position.y = x[1];
+            ctx->odometry.pose.pose.position.z = x[2];
+            ctx->odometry.pose.pose.orientation.w = ctx->external_odometry.pose.pose.orientation.w;
             ctx->odometry.pose.pose.orientation.x = ctx->external_odometry.pose.pose.orientation.x;
             ctx->odometry.pose.pose.orientation.y = ctx->external_odometry.pose.pose.orientation.y;
             ctx->odometry.pose.pose.orientation.z = ctx->external_odometry.pose.pose.orientation.z;
-            ctx->odometry.pose.pose.orientation.w = ctx->external_odometry.pose.pose.orientation.w;
 
             // use gyro
-            ctx->odometry.twist.twist.angular.x = ctx->imu.angular_velocity.x;
-            ctx->odometry.twist.twist.angular.y = ctx->imu.angular_velocity.y;
-            ctx->odometry.twist.twist.angular.z = ctx->imu.angular_velocity.z;
+            ctx->odometry.twist.twist.angular.x = omega_b[0];
+            ctx->odometry.twist.twist.angular.y = omega_b[1];
+            ctx->odometry.twist.twist.angular.z = omega_b[2];
 
             // ctx->odometry.twist.twist.angular.x = ctx->external_odometry.twist.twist.angular.x;
             // ctx->odometry.twist.twist.angular.y = ctx->external_odometry.twist.twist.angular.y;
             // ctx->odometry.twist.twist.angular.z = ctx->external_odometry.twist.twist.angular.z;
 
-            ctx->odometry.twist.twist.linear.x = ctx->external_odometry.twist.twist.linear.x;
-            ctx->odometry.twist.twist.linear.y = ctx->external_odometry.twist.twist.linear.y;
-            ctx->odometry.twist.twist.linear.z = ctx->external_odometry.twist.twist.linear.z;
+            ctx->odometry.twist.twist.linear.x = x[3];
+            ctx->odometry.twist.twist.linear.y = x[4];
+            ctx->odometry.twist.twist.linear.z = x[5];
             zros_pub_update(&ctx->pub_odometry);
         }
     }

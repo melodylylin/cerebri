@@ -59,6 +59,25 @@ int quaternion_to_euler_work_bytes(casadi_int* sz_arg, casadi_int* sz_res, casad
 #define quaternion_to_euler_SZ_RES 1
 #define quaternion_to_euler_SZ_IW 0
 #define quaternion_to_euler_SZ_W 16
+int quaternion_to_euler(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem);
+int quaternion_to_euler_alloc_mem(void);
+int quaternion_to_euler_init_mem(int mem);
+void quaternion_to_euler_free_mem(int mem);
+int quaternion_to_euler_checkout(void);
+void quaternion_to_euler_release(int mem);
+void quaternion_to_euler_incref(void);
+void quaternion_to_euler_decref(void);
+casadi_int quaternion_to_euler_n_in(void);
+casadi_int quaternion_to_euler_n_out(void);
+casadi_real quaternion_to_euler_default_in(casadi_int i);
+const char* quaternion_to_euler_name_in(casadi_int i);
+const char* quaternion_to_euler_name_out(casadi_int i);
+int quaternion_to_euler_work(casadi_int* sz_arg, casadi_int* sz_res, casadi_int* sz_iw, casadi_int* sz_w);
+int quaternion_to_euler_work_bytes(casadi_int* sz_arg, casadi_int* sz_res, casadi_int* sz_iw, casadi_int* sz_w);
+#define quaternion_to_euler_SZ_ARG 3
+#define quaternion_to_euler_SZ_RES 1
+#define quaternion_to_euler_SZ_IW 0
+#define quaternion_to_euler_SZ_W 28
 int position_control(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem);
 int position_control_alloc_mem(void);
 int position_control_init_mem(int mem);
@@ -80,6 +99,27 @@ int position_control_work_bytes(casadi_int* sz_arg, casadi_int* sz_res, casadi_i
 #define position_control_SZ_RES 2
 #define position_control_SZ_IW 0
 #define position_control_SZ_W 24
+int strapdown_ins_propagate(const casadi_real** arg, casadi_real** res, casadi_int* iw, casadi_real* w, int mem);
+int strapdown_ins_propagate_alloc_mem(void);
+int strapdown_ins_propagate_init_mem(int mem);
+void strapdown_ins_propagate_free_mem(int mem);
+int strapdown_ins_propagate_checkout(void);
+void strapdown_ins_propagate_release(int mem);
+void strapdown_ins_propagate_incref(void);
+void strapdown_ins_propagate_decref(void);
+casadi_int strapdown_ins_propagate_n_in(void);
+casadi_int strapdown_ins_propagate_n_out(void);
+casadi_real strapdown_ins_propagate_default_in(casadi_int i);
+const char* strapdown_ins_propagate_name_in(casadi_int i);
+const char* strapdown_ins_propagate_name_out(casadi_int i);
+const casadi_int* strapdown_ins_propagate_sparsity_in(casadi_int i);
+const casadi_int* strapdown_ins_propagate_sparsity_out(casadi_int i);
+int strapdown_ins_propagate_work(casadi_int* sz_arg, casadi_int* sz_res, casadi_int* sz_iw, casadi_int* sz_w);
+int strapdown_ins_propagate_work_bytes(casadi_int* sz_arg, casadi_int* sz_res, casadi_int* sz_iw, casadi_int* sz_w);
+#define strapdown_ins_propagate_SZ_ARG 5
+#define strapdown_ins_propagate_SZ_RES 1
+#define strapdown_ins_propagate_SZ_IW 0
+#define strapdown_ins_propagate_SZ_W 45
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
