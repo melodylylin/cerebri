@@ -210,13 +210,6 @@ static void rdd2_manual_run(void* p0, void* p1, void* p2)
 
         } else if (ctx->status.mode == synapse_msgs_Status_Mode_MODE_AUTO) {
 
-            // reset position setpoint
-            if (ctx->last_status.mode != synapse_msgs_Status_Mode_MODE_AUTO) {
-                ctx->position_sp.x = ctx->estimator_odometry.pose.pose.position.x;
-                ctx->position_sp.y = ctx->estimator_odometry.pose.pose.position.y;
-                ctx->position_sp.z = ctx->estimator_odometry.pose.pose.position.z;
-            }
-
             /* quaternion_to_euler:(q[4])->(e[3]) */
             CASADI_FUNC_ARGS(quaternion_to_euler);
             double q[4];
@@ -236,6 +229,14 @@ static void rdd2_manual_run(void* p0, void* p1, void* p2)
             double vwx = vbx * cos(yaw) - vby * sin(yaw);
             double vwy = vbx * sin(yaw) + vby * cos(yaw);
             double vwz = (double)ctx->joy.axes[JOY_AXES_THRUST];
+
+            // reset position setpoint
+            if (ctx->last_status.mode != synapse_msgs_Status_Mode_MODE_AUTO) {
+                ctx->position_sp.x = ctx->estimator_odometry.pose.pose.position.x;
+                ctx->position_sp.y = ctx->estimator_odometry.pose.pose.position.y;
+                ctx->position_sp.z = ctx->estimator_odometry.pose.pose.position.z;
+                ctx->camera_yaw = yaw;
+            }
 
             // position
             ctx->position_sp.x += dt * vwx;

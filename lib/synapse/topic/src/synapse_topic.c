@@ -177,7 +177,7 @@ static int topic_echo(const struct shell* sh, struct zros_topic* topic, void* ms
     struct k_poll_event events[1] = {
         *zros_sub_get_event(&sub),
     };
-    float sample_period = 2.0;
+    float sample_period = 10.0;
     int rc = 0;
 
     keep_running = true;
