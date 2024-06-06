@@ -457,7 +457,7 @@ static void rdd2_command_run(void* p0, void* p1, void* p2)
                         "  ns, time out of range of trajectory\n",
                     time_nsec, time_start_nsec);
                 // stop(ctx);
-                return;
+                continue;
             }
 
             // find current trajectory index, time_start, and time_stop
@@ -479,9 +479,9 @@ static void rdd2_command_run(void* p0, void* p1, void* p2)
 
                 // check if index exceeds bounds
                 if (curve_index >= ctx->bezier_trajectory.curves_count) {
-                    LOG_ERR("curve index exceeds bounds");
+                    // LOG_DBG("curve index exceeds bounds");
                     // stop(ctx);
-                    return;
+                    continue;
                 }
             }
 
