@@ -67,7 +67,7 @@ def derive_se23_error():
     R_wb = SO3Quat.elem(q_wb).to_Matrix()
     p_b = R_wb.T @ p_w
     v_w = R_wb @ v_b
-    X = SE23Quat.elem(ca.vertcat(p_w, v_w, q_wb))
+    X = SE23Quat.elem(ca.vertcat(p_b, v_b, q_wb))
     
     # reference input
     p_rw = ca.SX.sym('p_rw', 3)
@@ -130,6 +130,47 @@ def derive_so3_attitude_control():
         "so3_attitude_control": f_attitude_control
     }
 
+def derive_ref_att():
+    at_w = ca.SX.sym('at_w', 3)
+    qc_wb = SO3Quat.elem(ca.SX.sym('qc_wb', 4)) # camera orientation
+    
+    xW = ca.SX([1, 0, 0])
+    yW = ca.SX([0, 1, 0])
+    zW = ca.SX([0, 0, 1])
+
+    T = m*at_w
+
+    # thrust
+    nT = ca.norm_2(T)
+    
+    # body up is aligned with thrust
+    zB = ca.if_else(nT > 1e-3, T/nT, zW)
+
+    # point y using desired camera direction
+    ec = SO3EulerB321.from_Quat(qc_wb)
+    yt = ec.param[0]
+    xC = ca.vertcat(ca.cos(yt), ca.sin(yt), 0)
+    yB = ca.cross(zB, xC)
+    nyB = ca.norm_2(yB)
+    yB = ca.if_else(nyB > 1e-3, yB/nyB, xW)
+
+    # point x using cross product of unit vectors
+    xB = ca.cross(yB, zB)
+
+    # desired attitude matrix
+    Rd_wb = ca.horzcat(xB, yB, zB)
+    # [bx_wx by_wx bz_wx]
+    # [bx_wy by_wy bz_wy]
+    # [bx_wz by_wz bz_wz]
+
+    # deisred euler angles
+    # note using euler angles as set point is not problematic
+    # using Lie group approach for control
+    qr_wb = SO3Quat.from_Matrix(Rd_wb)
+    f_ref_att = ca.Function('ref_att',[at_w, qc_wb.param],[qr_wb.param],['at_w', 'qc_wb'],['qr_wb'])
+    return{
+        "ref_att": f_ref_att
+    }
 
 def derive_outerloop_control():
     """
@@ -151,7 +192,6 @@ def derive_outerloop_control():
     zeta = ca.SX.sym('zeta', 9)
     at_w = ca.SX.sym('at_w', 3)
     qc_wb = SO3Quat.elem(ca.SX.sym('qc_wb', 4)) # camera orientation
-    q_wb = SO3Quat.elem(ca.SX.sym('q_wb', 4))
     z_i = ca.SX.sym('z_i') # z velocity error integral
     dt = ca.SX.sym('dt') # time step
 
@@ -222,9 +262,9 @@ def derive_outerloop_control():
     # -------------------------------
     f_get_u = ca.Function(
         "se23_position_control",
-        [thrust_trim, kp, zeta, at_w, qc_wb.param, q_wb.param, z_i, dt], [nT, qr_wb.param, z_i_2], 
+        [thrust_trim, kp, zeta, at_w, qc_wb.param, z_i, dt], [nT, qr_wb.param, z_i_2], 
 
-        ['thrust_trim', 'kp', 'zeta', 'at_w', 'qc_wb', 'q_wb', 'z_i', 'dt'], 
+        ['thrust_trim', 'kp', 'zeta', 'at_w', 'qc_wb', 'z_i', 'dt'], 
         ['nT', 'qr_wb', 'z_i_2'])
 
     f_se23_attitude_control = ca.Function(
@@ -276,6 +316,7 @@ if __name__ == "__main__":
     eqs.update(derive_so3_attitude_control())
     eqs.update(derive_outerloop_control())
     eqs.update(derive_se23_error())
+    eqs.update(derive_ref_att())
 
     for name, eq in eqs.items():
         print('eq: ', name)

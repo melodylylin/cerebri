@@ -215,6 +215,15 @@ static void rdd2_position_run(void* p0, void* p1, void* p2)
                 CONFIG_CEREBRI_RDD2_PITCH_KP * 1e-3,
                 CONFIG_CEREBRI_RDD2_YAW_KP * 1e-3,
             };
+            double q_r[4];
+            {
+                /*ref_att:(at_w[3])->(qr_wb[4])*/
+                CASADI_FUNC_ARGS(ref_att);
+                args[0] = at_w;
+                args[1] = qc_wb;
+                res[0] = q_r;
+                CASADI_FUNC_CALL(ref_att);
+            }
 
             double zeta[9];
             {
@@ -225,12 +234,12 @@ static void rdd2_position_run(void* p0, void* p1, void* p2)
                 args[2] = q_wb;
                 args[3] = p_rw;
                 args[4] = v_rw;
-                args[5] = qr_wb;
+                args[5] = q_r;
                 res[0] = zeta;
                 CASADI_FUNC_CALL(se23_error);
             }
 
-            // se23_position_control:(thrust_trim,kp[3],zeta[9],at_w[3],qc_wb[4],q_wb[4],z_i,dt)
+            // se23_position_control:(thrust_trim,kp[3],zeta[9],at_w[3],q_wb[4],z_i,dt)
             // ->(nT,qr_wb[4],z_i_2)
             {
                 CASADI_FUNC_ARGS(se23_position_control)
@@ -239,9 +248,8 @@ static void rdd2_position_run(void* p0, void* p1, void* p2)
                 args[2] = zeta;
                 args[3] = at_w;
                 args[4] = qc_wb;
-                args[5] = q_wb;
-                args[6] = &z_i;
-                args[7] = &dt;
+                args[5] = &z_i;
+                args[6] = &dt;
                 res[0] = &nT;
                 res[1] = qr_wb;
                 res[2] = &z_i;
