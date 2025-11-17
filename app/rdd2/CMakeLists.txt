@@ -78,7 +78,7 @@ endif()
 if (CONFIG_CEREBRI_RDD2_POSITION)
   list(APPEND SOURCE_FILES
     src/position.c)
-elseif (CONFIG_CEREBRI_RDD2_LOGLINEAR_POSITION)
+elseif (CONFIG_CEREBRI_RDD2_LOG_LINEAR_POSITION)
   list(APPEND SOURCE_FILES
     src/log_linear_position.c)
 endif()
@@ -91,7 +91,7 @@ endif()
 if (CONFIG_CEREBRI_RDD2_ATTITUDE)
   list(APPEND SOURCE_FILES
     src/attitude.c)
-elseif (CONFIG_CEREBRI_RDD2_LOGLINEAR_ATTITUDE)
+elseif (CONFIG_CEREBRI_RDD2_LOG_LINEAR_ATTITUDE)
   list(APPEND SOURCE_FILES
     src/log_linear_attitude.c)
 endif()

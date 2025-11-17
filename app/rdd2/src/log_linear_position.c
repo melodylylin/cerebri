@@ -23,7 +23,7 @@
 #include <cerebri/core/casadi.h>
 #include <cerebri/core/log_utils.h>
 
-#define MY_STACK_SIZE 3072
+#define MY_STACK_SIZE 4096 //3072
 #define MY_PRIORITY   4
 
 CEREBRI_NODE_LOG_INIT(rdd2_position, LOG_LEVEL_WRN);
@@ -31,6 +31,31 @@ CEREBRI_NODE_LOG_INIT(rdd2_position, LOG_LEVEL_WRN);
 static K_THREAD_STACK_DEFINE(g_my_stack_area, MY_STACK_SIZE);
 
 static const double thrust_trim = CONFIG_CEREBRI_RDD2_THRUST_TRIM * 1e-3;
+
+// constants
+static const double BK[9][9] = {
+	{-4.0, 0, 0, 0, 0, 0, 0, 0, 0}, 
+	{0, -4.0, 0, 0, 0, 0, 0, 0, 0}, 
+	{0, 0, -4.0, 0, 0, 0, 0, 0, 0}, 
+	{0, 0, 0, -2.0, 0, 0, 0, 0, 0}, 
+	{0, 0, 0, 0, -2.0, 0, 0, 0, 0}, 
+	{0, 0, 0, 0, 0, -2.0, 0, 0, 0}, 
+	{0, 0, 0, 0, 0, 0, -6.0, 0, 0}, 
+	{0, 0, 0, 0, 0, 0, 0, -6.0, 0}, 
+	{0, 0, 0, 0, 0, 0, 0, 0, -1.0}
+};
+
+static const double ki[3] = {
+	CONFIG_CEREBRI_RDD2_X_KI * 1e-6,
+	CONFIG_CEREBRI_RDD2_Y_KI * 1e-6,
+	CONFIG_CEREBRI_RDD2_Z_KI * 1e-6,
+};
+
+static const double imax[3] = {
+	CONFIG_CEREBRI_RDD2_X_IMAX * 1e-6,
+	CONFIG_CEREBRI_RDD2_Y_IMAX * 1e-6,
+	CONFIG_CEREBRI_RDD2_Z_IMAX * 1e-6,
+};
 
 struct context {
 	struct zros_node node;
@@ -116,7 +141,8 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 
 	double dt = 0;
 	int64_t ticks_last = k_uptime_ticks();
-	double z_i[3]; // altitude error integral
+	double z_i[3]; // error integral
+	double z_i_2[3];
 
 	while (k_sem_take(&ctx->running, K_NO_WAIT) < 0) {
 		int rc = 0;
@@ -139,8 +165,7 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 		dt = (double)(ticks_now - ticks_last) / CONFIG_SYS_CLOCK_TICKS_PER_SEC;
 		ticks_last = ticks_now;
 		if (dt < 0 || dt > 0.5) {
-			LOG_WRN("position update rate too low");
-			continue;
+			LOG_WRN("position update rate too low: %10.4f", dt);
 		}
 
 		if (ctx->status.mode == synapse_pb_Status_Mode_MODE_POSITION ||
@@ -188,41 +213,20 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 				CASADI_FUNC_CALL(rotate_vector_b_to_w)
 			}
 
-			double nT;       // thrust
-			double qr_wb[4]; // attitude setpoint
-			// {
-			// 	// position_control:(thrust_trim,pt_w[3],vt_w[3],at_w[3],
-			// 	// qc_wb[4],p_w[3],v_w[3],z_i,dt)->(nT,qr_wb[4],z_i_2)
-			// 	CASADI_FUNC_ARGS(position_control)
-
-			// 	args[0] = &thrust_trim;
-			// 	args[1] = pt_w;
-			// 	args[2] = vt_w;
-			// 	args[3] = at_w;
-			// 	args[4] = qc_wb;
-			// 	args[5] = p_w;
-			// 	args[6] = v_w;
-			// 	args[7] = z_i;
-			// 	args[8] = &dt;
-
-			// 	res[0] = &nT;
-			// 	res[1] = qr_wb;
-			// 	res[2] = z_i;
-
-			// 	CASADI_FUNC_CALL(position_control)
-			// }
-
+			// output
+			double nT; // thrust
+			double qr_wb[4];
 			double zeta[9]; // se23 error
 			{
 				// se23_error:(p_w[3],v_b[3],q_wb[4],p_rw[3],v_rw[3],q_r[4])->(zeta[9])
 				CASADI_FUNC_ARGS(se23_error)
 
-				args[0] = pt_w;
-				args[1] = vt_w;
-				args[2] = qr_wb;
-				args[3] = p_w;
-				args[4] = v_b;
-				args[5] = q_wb;
+				args[0] = p_w;
+				args[1] = v_w;
+				args[2] = q_wb;
+				args[3] = pt_w;
+				args[4] = vt_w;
+				args[5] = qc_wb;
 
 				res[0] = zeta;
 
@@ -231,21 +235,21 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 
 			// se23_control:(thrust_trim,kp[3],zeta[9],at_w[3],q_wb[4],z_i,dt)->(nT,z_i_2,u_omega[3],q_sp[4])
 			{
-				double dummy[3];
 				CASADI_FUNC_ARGS(se23_control)
 
 				args[0] = &thrust_trim;
-				args[1] = kp;
-				args[2] = zeta;
-				args[3] = at_w;
-				args[4] = q_wb;
-				args[5] = z_i;
-				args[6] = &dt;
+				args[1] = &BK[0][0];
+				args[2] = ki;
+				args[3] = imax;
+				args[4] = zeta;
+				args[5] = at_w;
+				args[6] = qc_wb;
+				args[7] = z_i;
+				args[8] = &dt;
 
 				res[0] = &nT;
-				res[1] = z_i;
-				res[2] = dummy;
-				res[3] = q_sp[4];
+				res[1] = z_i_2;
+				res[2] = qr_wb;
 
 				CASADI_FUNC_CALL(se23_control)
 			}
@@ -265,7 +269,13 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 			}
 
 			if (data_ok) {
-				stamp_msg(&ctx->attitue_sp.stamp, k_uptime_ticks());
+
+				z_i[0] = z_i_2[0];
+				z_i[1] = z_i_2[1];
+				z_i[2] = z_i_2[2];
+
+				stamp_msg(&ctx->attitude_sp.stamp, k_uptime_ticks());
+				ctx->attitude_sp.has_stamp = true;
 				ctx->attitude_sp.w = qr_wb[0];
 				ctx->attitude_sp.x = qr_wb[1];
 				ctx->attitude_sp.y = qr_wb[2];
@@ -273,6 +283,7 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 				zros_pub_update(&ctx->pub_attitude_sp);
 
 				stamp_msg(&ctx->force_sp.stamp, k_uptime_ticks());
+				ctx->force_sp.has_stamp = true;
 				ctx->force_sp.z = nT;
 				zros_pub_update(&ctx->pub_force_sp);
 			}

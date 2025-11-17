@@ -108,6 +108,24 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 
 	rdd2_position_init(ctx);
 
+	// constants
+	static const double kp[2] = {
+		CONFIG_CEREBRI_RDD2_POS_KP * 1e-6,
+		CONFIG_CEREBRI_RDD2_VEL_KP * 1e-6,
+	};
+
+	static const double ki[3] = {
+		CONFIG_CEREBRI_RDD2_X_KI * 1e-6,
+		CONFIG_CEREBRI_RDD2_Y_KI * 1e-6,
+		CONFIG_CEREBRI_RDD2_Z_KI * 1e-6,
+	};
+
+	static const double imax[3] = {
+		CONFIG_CEREBRI_RDD2_X_IMAX * 1e-6,
+		CONFIG_CEREBRI_RDD2_Y_IMAX * 1e-6,
+		CONFIG_CEREBRI_RDD2_Z_IMAX * 1e-6,
+	};
+
 	struct k_poll_event events[] = {
 		*zros_sub_get_event(&ctx->sub_odometry_estimator),
 	};
@@ -195,14 +213,17 @@ static void rdd2_position_run(void *p0, void *p1, void *p2)
 				CASADI_FUNC_ARGS(position_control)
 
 				args[0] = &thrust_trim;
-				args[1] = pt_w;
-				args[2] = vt_w;
-				args[3] = at_w;
-				args[4] = qc_wb;
-				args[5] = p_w;
-				args[6] = v_w;
-				args[7] = z_i;
-				args[8] = &dt;
+				args[1] = kp;
+				args[2] = ki;
+				args[3] = imax;
+				args[4] = pt_w;
+				args[5] = vt_w;
+				args[6] = at_w;
+				args[7] = qc_wb;
+				args[8] = p_w;
+				args[9] = v_w;
+				args[10] = z_i;
+				args[11] = &dt;
 
 				res[0] = &nT;
 				res[1] = qr_wb;
