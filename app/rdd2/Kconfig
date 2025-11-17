@@ -264,7 +264,7 @@ config CEREBRI_RDD2_ATTITUDE_RATE_FCUT
     attitude_rate cut frequency * 1e3
 
 config CEREBRI_RDD2_ROLLRATE_IMAX
-  int "rollrate imax * 1e"
+  int "rollrate imax * 1e6"
   default 20000
   help
     rollrate imax * 1e6
